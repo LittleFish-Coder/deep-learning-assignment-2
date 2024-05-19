@@ -21,5 +21,16 @@ pip install -r requirements.txt
 bash scripts/download_dataset.sh
 ```
 
+## Data Preprocessing
+In our dataset, there contains 50 classes, each class has multiple images. 
+### Sample images from the dataset:
+|n02111277_1207.JPEG|n02112137_7.JPEG|n02112137_112.JPEG|
+|---|---|---|
+|![1207](./src/n02111277_1207.JPEG)|![7](./src/n02112137_7.JPEG)|![112](./src/n02112137_112.JPEG)|
+
+It's worth noting that each image does not have the same size, so we need to standardize the size of all images. Moreover, some images are in RGB format, while others are in grayscale format.
+- Image Size: we resize all images to **256x256** pixels.
+- Image Channel: we convert all images to **RGB format(3 channels)**.
+
 ## Report
 
