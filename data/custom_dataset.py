@@ -1,12 +1,13 @@
 import os
 from PIL import Image
 from torch.utils.data import Dataset
+from torchvision import transforms
 
 
 class MiniImageNetDataset(Dataset):
-    def __init__(self, text_file, root_dir, transform=None):
+    def __init__(self, text_file, root_dir):
         self.root_dir = root_dir
-        self.transform = transform
+        self.transform = transforms.Compose([transforms.Resize((256, 256)), transforms.ToTensor()])
         self.image_paths = []
         self.labels = []
         # Read the text file and populate the image_paths and labels
@@ -22,6 +23,5 @@ class MiniImageNetDataset(Dataset):
     def __getitem__(self, idx):
         image = Image.open(self.image_paths[idx])
         label = self.labels[idx]
-        if self.transform:
-            image = self.transform(image)
+        image = self.transform(image)  # apply the transformation to the image
         return image, label

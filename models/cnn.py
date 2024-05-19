@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 
 class CNN(nn.Module):
     """
-    The input image size is of shape (batch_size, 3, 256, 341)
+    The input image size is of shape (batch_size, 3, 256, 256)
     """
 
     def __init__(self, in_channels=3, num_classes=50):
@@ -17,21 +17,21 @@ class CNN(nn.Module):
         self.norm1 = nn.BatchNorm2d(num_features=32)
         self.norm2 = nn.BatchNorm2d(num_features=64)
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-        self.fc1 = nn.Linear(in_features=64 * 62 * 83, out_features=num_classes)
+        self.fc1 = nn.Linear(in_features=64 * 62 * 62, out_features=num_classes)
 
     def forward(self, x):
         # 1st convolutional layer
-        x = self.conv1(x)  # x.shape = (batch_size, 32, 254, 339)
+        x = self.conv1(x)  # x.shape = (batch_size, 32, 254, 254)
         x = self.norm1(x)
         x = F.relu(x)
-        x = self.pool(x)  # x.shape = (batch_size, 32, 127, 169)
+        x = self.pool(x)  # x.shape = (batch_size, 32, 127, 127)
         # 2nd convolutional layer
-        x = self.conv2(x)  # x.shape = (batch_size, 64, 125, 167)
+        x = self.conv2(x)  # x.shape = (batch_size, 64, 125, 125)
         x = self.norm2(x)
         x = F.relu(x)
-        x = self.pool(x)  # x.shape = (batch_size, 64, 62, 83)
+        x = self.pool(x)  # x.shape = (batch_size, 64, 62, 62)
         # Flatten P.S. x = x.view(x.size(0), -1) also works
-        x = x.reshape(x.shape[0], -1)  # x.shape = (batch_size, 64 * 62 * 83)
+        x = x.reshape(x.shape[0], -1)  # x.shape = (batch_size, 64 * 62 * 62)
         # Fully connected layer
         x = self.fc1(x)
         # we don't apply softmax here because pytorch's cross-entropy loss function implicitly applies softmax
