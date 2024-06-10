@@ -48,7 +48,7 @@ def task1():
     # print(f"Number of test samples: {len(test_dataset)}")
 
     # hyperparameters
-    n_epochs = 100
+    n_epochs = 15
     in_channels = 3
     num_classes = 50
     learning_rate = 0.001
@@ -83,6 +83,7 @@ def task1():
 
             optimizer.zero_grad()
             scores = model(data)
+            # print(scores.shape, targets.shape)    # torch.Size([64, 50]) torch.Size([64])
             loss = criterion(scores, targets)
             loss.backward()
             optimizer.step()
@@ -95,9 +96,9 @@ def task1():
             running_accuracy += correct
             running_loss += loss.item()
 
-            # print the loss every 5 iterations
+            # print the accuracy and loss every 5 iterations
             if batch_idx % 5 == 0:
-                print(f"Iteration {batch_idx}/{len(train_loader)}: Loss = {loss.item()}")
+                print(f"Iteration {batch_idx}/{len(train_loader)}: Accuracy: {correct}, Loss: {loss.item()}")
         running_accuracy = running_accuracy / len(train_dataset)
         running_loss = running_loss / len(train_dataset)
 
@@ -111,8 +112,6 @@ def task1():
         # evaluate the model
         model.eval()
         with torch.no_grad():
-            correct = 0
-            total = 0
             running_accuracy, running_loss = 0, 0
             for data, targets in tqdm(val_loader):
 
@@ -125,15 +124,14 @@ def task1():
 
                 # predict
                 _, predictions = scores.max(1)
-                correct += (predictions == targets).sum()
-                total += targets.size(0)
+                correct = (predictions == targets).sum()
 
                 # sum the correct predictions and loss
                 running_accuracy += correct
                 running_loss += loss.item()
 
-            running_accuracy = running_accuracy / total
-            running_loss = running_loss / total
+            running_accuracy = running_accuracy / len(val_dataset)
+            running_loss = running_loss / len(val_dataset)
             print(f"Validation Accuracy: {running_accuracy}")
             print(f"Validation Loss: {running_loss}")
 
