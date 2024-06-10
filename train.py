@@ -98,7 +98,7 @@ def task1():
 
             # print the accuracy and loss every 5 iterations
             if batch_idx % 5 == 0:
-                print(f"Iteration {batch_idx}/{len(train_loader)}: Accuracy: {correct}, Loss: {loss.item()}")
+                print(f"Iteration {batch_idx}/{len(train_loader)}: Accuracy: {correct}/{len(data)} Loss: {loss}/{len(data)}")
         running_accuracy = running_accuracy / len(train_dataset)
         running_loss = running_loss / len(train_dataset)
 
@@ -143,6 +143,11 @@ def task1():
         if epoch % 5 == 0:
             print(f"Saving the model for epoch {epoch}")
             torch.save(model.state_dict(), f"{checkpoints_dir}/task1_{epoch}.pth")
+
+        # save the best model based on validation loss
+        if epoch == 0 or running_loss < min(val_loss):
+            print(f"Saving the best model for epoch {epoch}")
+            torch.save(model.state_dict(), f"{checkpoints_dir}/task1_best.pth")
 
     # save the training and validation accuracy and loss (plot)
     plot_images(train_accuracy, val_accuracy, train_loss, val_loss, name="task1.png")
