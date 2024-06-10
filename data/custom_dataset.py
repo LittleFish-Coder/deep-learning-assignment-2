@@ -22,6 +22,8 @@ class MiniImageNetDataset(Dataset):
 
     def __getitem__(self, idx):
         image = Image.open(self.image_paths[idx])
+        if image.mode == "L":  # if the image is grayscale
+            image = image.convert("RGB")
         label = self.labels[idx]
         image = self.transform(image)  # apply the transformation to the image
         return image, label
