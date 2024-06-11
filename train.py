@@ -10,6 +10,7 @@ from torchvision import models
 import matplotlib.pyplot as plt
 from torchsummary import summary
 import os
+import argparse
 
 
 def plot_images(train_accuracy, val_accuracy, train_loss, val_loss, filename="acc_loss.png"):
@@ -169,7 +170,7 @@ def train_model(
 
 
 # Designing a Convolution Module for Variable Input Channels
-def task1():
+def task1_CNN():
 
     # checkpoints
     checkpoints_dir = "checkpoints"
@@ -314,17 +315,22 @@ def task2_ResNet34():
 
 if __name__ == "__main__":
 
-    task = "task2_ResNet34"
+    parser = argparse.ArgumentParser(description="Training script")
+    parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2]")
+    args = parser.parse_args()
 
-    if task == "task1":
-        print("Running task1")
-        task1()  # do task1
+    task = args.task
+
+    print(f"Running task: {task}")
+
+    if task == "task1_CNN":
+        task1_CNN()
     elif task == "task1_dynamic":
-        print("Running task1_dynamic")
         task1_dynamic()
     elif task == "task2_ResNet34":
-        print("Running task2_ResNet34")
         task2_ResNet34()
+    elif task == "task2":
+        task2()
     else:
-        print("Running task2")
-        task2()  # do task2
+        print("Invalid task")
+        exit(1)
