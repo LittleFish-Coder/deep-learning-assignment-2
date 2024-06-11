@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim import Adam
 from torch.utils.data import DataLoader
+from torchsummary import summary
 
 
 class CNN(nn.Module):
@@ -36,3 +37,12 @@ class CNN(nn.Module):
         x = self.fc1(x)
         # we don't apply softmax here because pytorch's cross-entropy loss function implicitly applies softmax
         return x
+
+
+if __name__ == "__main__":
+
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    model = CNN().to(device)
+
+    summary(model, input_size=(3, 256, 256))
