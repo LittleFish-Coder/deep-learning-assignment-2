@@ -170,128 +170,69 @@ def train_model(
 
 # Designing a Convolution Module for Variable Input Channels
 def task1():
+
+    # checkpoints
+    checkpoints_dir = "checkpoints"
+    checkpoints_name = "task1_CNN"  # checkpoints name
+    if not os.path.exists(checkpoints_dir):
+        os.makedirs(checkpoints_dir)
+
+    # log history
+    log_dir = "log"
+    log_name = "task1_CNN_log.log"  # log name
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    # plot history
+    plot_dir = "plot"
+    plot_name = "task1_CNN.png"  # plot name
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+
+    # device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
+
+    # hyperparameters
+    n_epochs = 15
+    num_classes = 50
+    learning_rate = 0.001
+    batch_size = 64
+    in_channels = 3
+    input_size = (3, 256, 256)
+
     # get the dataset and dataloader
     ## train
     print(f"Preparing the training dataset...")
     train_dataset = MiniImageNetDataset(text_file="train.txt", root_dir="./dataset")
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=16)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=16)
     ## val
     print(f"Preparing the validation dataset...")
     val_dataset = MiniImageNetDataset(text_file="val.txt", root_dir="./dataset")
-    val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=16)
-    # ## test
-    # print(f"Preparing the test dataset...")
-    # test_dataset = MiniImageNetDataset(text_file="test.txt", root_dir="./dataset")
-    # test_loader = DataLoader(test_dataset, batch_size=64, shuffle=False, num_workers=8)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=16)
 
     print(f"Number of training samples: {len(train_dataset)}")
     print(f"Number of validation samples: {len(val_dataset)}")
-    # print(f"Number of test samples: {len(test_dataset)}")
-
-    # hyperparameters
-    n_epochs = 15
-    in_channels = 3
-    num_classes = 50
-    learning_rate = 0.001
-    checkpoints_dir = "checkpoints"
-    if not os.path.exists(checkpoints_dir):
-        os.makedirs(checkpoints_dir)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
 
     # initialize the model
-    model = CNN(in_channels=in_channels, num_classes=num_classes).to(device=device)
+    model = CNN(in_channels=in_channels, num_classes=num_classes)
 
-    # initialize the optimizer
-    optimizer = Adam(model.parameters(), lr=learning_rate)
-    criterion = nn.CrossEntropyLoss()
+    # move the model to the device
+    model = model.to(device=device)
 
-    # Train and Val Accuracy/Loss
-    train_accuracy, train_loss = [], []
-    val_accuracy, val_loss = [], []
+    # print the model summary
+    summary(model, input_size=input_size)
 
-    # train the model
-    print("Start training...")
-    for epoch in range(n_epochs):
-        model.train()  # set the model to training mode
-        print(f"Epoch {epoch}/{n_epochs}")
-        running_accuracy, running_loss = 0, 0
-        for batch_idx, (data, targets) in enumerate(tqdm(train_loader)):
+    # train model
+    train_accuracy, val_accuracy, train_loss, val_loss = train_model(
+        model, train_loader, val_loader, n_epochs, device, learning_rate, checkpoints_dir, checkpoints_name
+    )
 
-            # move the data to the device
-            data = data.to(device=device)
-            targets = targets.to(device=device)
-
-            optimizer.zero_grad()
-            scores = model(data)
-            # print(scores.shape, targets.shape)    # torch.Size([64, 50]) torch.Size([64])
-            loss = criterion(scores, targets)
-            loss.backward()
-            optimizer.step()
-
-            # predict
-            _, predictions = scores.max(1)
-            correct = (predictions == targets).sum()
-
-            # sum the correct predictions and loss
-            running_accuracy += correct
-            running_loss += loss.item()
-
-            # print the accuracy and loss every 5 iterations
-            if batch_idx % 5 == 0:
-                print(f"Iteration {batch_idx}/{len(train_loader)}: Accuracy: {correct}/{len(data)} Loss: {loss}/{len(data)}")
-        running_accuracy = running_accuracy / len(train_dataset)
-        running_loss = running_loss / len(train_dataset)
-
-        print(f"Training Accuracy: {running_accuracy}")
-        print(f"Training Loss: {running_loss}")
-
-        # record the training accuracy and loss
-        train_accuracy.append(running_accuracy)
-        train_loss.append(running_loss)
-
-        # evaluate the model
-        model.eval()
-        with torch.no_grad():
-            running_accuracy, running_loss = 0, 0
-            for data, targets in tqdm(val_loader):
-
-                # move the data to the device
-                data = data.to(device=device)
-                targets = targets.to(device=device)
-
-                scores = model(data)
-                loss = criterion(scores, targets)
-
-                # predict
-                _, predictions = scores.max(1)
-                correct = (predictions == targets).sum()
-
-                # sum the correct predictions and loss
-                running_accuracy += correct
-                running_loss += loss.item()
-
-            running_accuracy = running_accuracy / len(val_dataset)
-            running_loss = running_loss / len(val_dataset)
-            print(f"Validation Accuracy: {running_accuracy}")
-            print(f"Validation Loss: {running_loss}")
-
-            # record the validation accuracy and loss
-            val_accuracy.append(running_accuracy)
-            val_loss.append(running_loss)
-
-        # save the model every 5 epochs
-        if epoch % 5 == 0:
-            print(f"Saving the model for epoch {epoch}")
-            torch.save(model.state_dict(), f"{checkpoints_dir}/task1_{epoch}.pth")
-
-        # save the best model based on validation loss
-        if epoch == 0 or running_loss < min(val_loss):
-            print(f"Saving the best model for epoch {epoch}")
-            torch.save(model.state_dict(), f"{checkpoints_dir}/task1_best.pth")
+    # save the metrics
+    save_metrics(train_accuracy, val_accuracy, train_loss, val_loss, filename=f"{log_dir}/{log_name}")
 
     # save the training and validation accuracy and loss (plot)
-    plot_images(train_accuracy, val_accuracy, train_loss, val_loss, name="task1.png")
+    plot_images(train_accuracy, val_accuracy, train_loss, val_loss, filename=f"{plot_dir}/{plot_name}")
 
 
 # Designing a Convolution Module for Variable Input Channels
@@ -334,17 +275,18 @@ def task2_ResNet34():
     num_classes = 50
     learning_rate = 0.001
     batch_size = 64
+    in_channels = 3
     input_size = (3, 256, 256)
 
     # get the dataset and dataloader
     ## train
     print(f"Preparing the training dataset...")
     train_dataset = MiniImageNetDataset(text_file="train.txt", root_dir="./dataset")
-    train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True, num_workers=16)
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=16)
     ## val
     print(f"Preparing the validation dataset...")
     val_dataset = MiniImageNetDataset(text_file="val.txt", root_dir="./dataset")
-    val_loader = DataLoader(val_dataset, batch_size=64, shuffle=False, num_workers=16)
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=16)
 
     print(f"Number of training samples: {len(train_dataset)}")
     print(f"Number of validation samples: {len(val_dataset)}")
@@ -355,6 +297,7 @@ def task2_ResNet34():
     # move the model to the device
     model = model.to(device=device)
 
+    # print the model summary
     summary(model, input_size=input_size)
 
     # train model
