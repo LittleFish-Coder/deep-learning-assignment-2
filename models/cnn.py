@@ -22,6 +22,7 @@ class CNN(nn.Module):
         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
         self.fc1 = nn.Linear(in_features=128 * 30 * 30, out_features=512)
         self.fc2 = nn.Linear(in_features=512, out_features=num_classes)
+        self.dropout = nn.Dropout(p=0.5)
 
     def forward(self, x):
         # 1st convolutional layer
@@ -40,6 +41,7 @@ class CNN(nn.Module):
         x = self.conv3(x)  # x.shape = (batch_size, 128, 60, 60)
         x = self.norm3(x)
         x = F.relu(x)
+        x = self.dropout(x)
         x = self.pool(x)  # x.shape = (batch_size, 128, 30, 30)
 
         # Flatten
@@ -48,6 +50,8 @@ class CNN(nn.Module):
         # Fully connected layer
         x = self.fc1(x)
         x = F.relu(x)
+
+        # Output layer
         x = self.fc2(x)
 
         # We don't apply softmax here because PyTorch's cross-entropy loss function implicitly applies softmax

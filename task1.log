@@ -1,0 +1,56 @@
+Running task: task1_CNN
+Device: cuda
+Preparing the training dataset...
+Preparing the validation dataset...
+Number of training samples: 63325
+Number of validation samples: 450
+----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+            Conv2d-1         [-1, 32, 254, 254]             896
+       BatchNorm2d-2         [-1, 32, 254, 254]              64
+         MaxPool2d-3         [-1, 32, 127, 127]               0
+            Conv2d-4         [-1, 64, 125, 125]          18,496
+       BatchNorm2d-5         [-1, 64, 125, 125]             128
+         MaxPool2d-6           [-1, 64, 62, 62]               0
+            Conv2d-7          [-1, 128, 60, 60]          73,856
+       BatchNorm2d-8          [-1, 128, 60, 60]             256
+           Dropout-9          [-1, 128, 60, 60]               0
+        MaxPool2d-10          [-1, 128, 30, 30]               0
+           Linear-11                  [-1, 512]      58,982,912
+           Linear-12                   [-1, 50]          25,650
+================================================================
+Total params: 59,102,258
+Trainable params: 59,102,258
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 0.75
+Forward/backward pass size (MB): 64.01
+Params size (MB): 225.46
+Estimated Total Size (MB): 290.21
+----------------------------------------------------------------
+Start training...
+Epoch 0/25
+  0%|          | 0/990 [00:00<?, ?it/s]  0%|          | 0/990 [00:01<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/littlefish/dl2/train.py", line 389, in <module>
+    task1_CNN()
+  File "/home/littlefish/dl2/train.py", line 229, in task1_CNN
+    train_accuracy, val_accuracy, train_loss, val_loss = train_model(
+  File "/home/littlefish/dl2/train.py", line 98, in train_model
+    scores = model(data)
+  File "/home/littlefish/miniconda3/envs/dl2/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/littlefish/miniconda3/envs/dl2/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/littlefish/dl2/models/cnn.py", line 36, in forward
+    x = self.norm2(x)
+  File "/home/littlefish/miniconda3/envs/dl2/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1532, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/littlefish/miniconda3/envs/dl2/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1541, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/littlefish/miniconda3/envs/dl2/lib/python3.10/site-packages/torch/nn/modules/batchnorm.py", line 175, in forward
+    return F.batch_norm(
+  File "/home/littlefish/miniconda3/envs/dl2/lib/python3.10/site-packages/torch/nn/functional.py", line 2509, in batch_norm
+    return torch.batch_norm(
+torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 246.00 MiB. GPU 

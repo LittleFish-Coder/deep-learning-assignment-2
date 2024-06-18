@@ -196,7 +196,7 @@ def task1_CNN():
     print(f"Device: {device}")
 
     # hyperparameters
-    n_epochs = 15
+    n_epochs = 25
     num_classes = 50
     learning_rate = 0.001
     batch_size = 64
@@ -334,7 +334,7 @@ def task2_ResNet34():
     print(f"Device: {device}")
 
     # hyperparameters
-    n_epochs = 15
+    n_epochs = 50
     num_classes = 50
     learning_rate = 0.001
     batch_size = 64

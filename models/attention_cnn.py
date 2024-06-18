@@ -78,6 +78,36 @@ class SpatialAttention(nn.Module):
         return self.sigmoid(x)
 
 
+class Block(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size=3, stride=1, padding=1):
+        super(Block, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)
+        self.bn = nn.BatchNorm2d(out_channels)
+        self.relu = nn.ReLU(inplace=True)
+
+        # Residual block
+        self.use_identity = stride == 1 and in_channels == out_channels
+        if not self.use_identity:
+            self.shortcut_conv = nn.Conv2d(in_channels, out_channels, 1, stride, padding=0)
+            self.shortcut_bn = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        identity = x
+
+        x = self.conv(x)
+        x = self.bn(x)
+        x = self.relu(x)
+
+        if not self.use_identity:
+            identity = self.shortcut_conv(identity)
+            identity = self.shortcut_bn(identity)
+
+        x = x + identity
+        x = self.relu(x)
+
+        return x
+
+
 class ConvNet(nn.Module):
     """
     The input image size is of shape (batch_size, 3, 256, 256)
@@ -85,31 +115,46 @@ class ConvNet(nn.Module):
 
     def __init__(self, method="self", in_channels=3, num_classes=50):
         super(ConvNet, self).__init__()
-        self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3, padding=0)
-        self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=0)
-        self.bn1 = nn.BatchNorm2d(num_features=32)
-        self.bn2 = nn.BatchNorm2d(num_features=64)
+
+        self.block1 = Block(in_channels, 32)
+        self.block2 = Block(32, 64)
+        self.block3 = Block(64, 128)
+        self.block4 = Block(128, 256)
+        self.pool = nn.MaxPool2d(2)
         self.sa = SpatialAttention()
-        self.relu = nn.ReLU(inplace=True)
         self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Linear(in_features=64, out_features=num_classes)
+        self.fc = nn.Linear(256, num_classes)
+        self.dropout = nn.Dropout(0.5)
+
+        # self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3, padding=0)
+        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=0)
+        # self.bn1 = nn.BatchNorm2d(num_features=32)
+        # self.bn2 = nn.BatchNorm2d(num_features=64)
+        # self.sa = SpatialAttention()
+        # self.relu = nn.ReLU(inplace=True)
+        # self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
+        # self.fc = nn.Linear(in_features=64, out_features=num_classes)
 
     def forward(self, x):
-        # 1st convolutional layer
-        x = self.conv1(x)
-        x = self.bn1(x)
-        ## attention mechanism
-        x = self.sa(x) * x
-        x = self.relu(x)
+        # 1st block
+        x = self.block1(x)
+        x = self.pool(x)
 
-        # 2nd convolutional layer
-        x = self.conv2(x)
-        x = self.bn2(x)
-        ## attention mechanism
-        x = self.sa(x) * x
-        x = self.relu(x)
+        # 2nd block
+        x = self.block2(x)
+        x = self.pool(x)
 
-        # Global average pooling
+        # 3rd block
+        x = self.block3(x)
+        x = self.pool(x)
+
+        # 4th block
+        x = self.block4(x)
+        x = self.pool(x)
+
+        # attention mechanism
+        x = self.sa(x) * x
+        x = self.dropout(x)
         x = self.global_avg_pool(x)
 
         # Flatten
@@ -117,4 +162,27 @@ class ConvNet(nn.Module):
 
         # Fully connected layer
         x = self.fc(x)
+
+        # # 1st convolutional layer
+        # x = self.conv1(x)
+        # x = self.bn1(x)
+        # ## attention mechanism
+        # x = self.sa(x) * x
+        # x = self.relu(x)
+
+        # # 2nd convolutional layer
+        # x = self.conv2(x)
+        # x = self.bn2(x)
+        # ## attention mechanism
+        # x = self.sa(x) * x
+        # x = self.relu(x)
+
+        # # Global average pooling
+        # x = self.global_avg_pool(x)
+
+        # # Flatten
+        # x = x.view(x.size(0), -1)
+
+        # # Fully connected layer
+        # x = self.fc(x)
         return x
