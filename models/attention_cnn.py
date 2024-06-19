@@ -27,43 +27,6 @@ from torchsummary import summary
 #         return out
 
 
-# class ATTENTION_CNN(nn.Module):
-#     """
-#     The input image size is of shape (batch_size, 3, 256, 256)
-#     """
-
-#     def __init__(self, method="self", in_channels=3, num_classes=50):
-#         super(ATTENTION_CNN, self).__init__()
-#         self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3, padding=0)
-#         self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=0)
-#         self.norm1 = nn.BatchNorm2d(num_features=32)
-#         self.norm2 = nn.BatchNorm2d(num_features=64)
-#         self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
-#         self.fc1 = nn.Linear(in_features=64 * 62 * 62, out_features=num_classes)
-#         self.attention1 = SelfAttention(in_channels=32)
-#         self.attention2 = SelfAttention(in_channels=64)
-
-#     def forward(self, x):
-#         # 1st convolutional layer
-#         x = self.conv1(x)
-#         x = self.norm1(x)
-#         x = F.relu(x)
-#         x = self.pool(x)
-#         x = self.attention1(x)
-#         # 2nd convolutional layer
-#         x = self.conv2(x)
-#         x = self.norm2(x)
-#         x = F.relu(x)
-#         x = self.pool(x)
-#         x = self.attention2(x)
-#         # Flatten P.S. x = x.view(x.size(0), -1) also works
-#         x = x.reshape(x.shape[0], -1)
-#         # Fully connected layer
-#         x = self.fc1(x)
-#         # we don't apply softmax here because pytorch's cross-entropy loss function implicitly applies softmax
-#         return x
-
-
 class SpatialAttention(nn.Module):
     def __init__(self, kernel_size=7):
         super(SpatialAttention, self).__init__()
@@ -113,7 +76,7 @@ class ConvNet(nn.Module):
     The input image size is of shape (batch_size, 3, 256, 256)
     """
 
-    def __init__(self, method="self", in_channels=3, num_classes=50):
+    def __init__(self, in_channels=3, num_classes=50):
         super(ConvNet, self).__init__()
 
         self.block1 = Block(in_channels, 32)
@@ -125,15 +88,6 @@ class ConvNet(nn.Module):
         self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
         self.fc = nn.Linear(256, num_classes)
         self.dropout = nn.Dropout(0.5)
-
-        # self.conv1 = nn.Conv2d(in_channels=in_channels, out_channels=32, kernel_size=3, padding=0)
-        # self.conv2 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=3, padding=0)
-        # self.bn1 = nn.BatchNorm2d(num_features=32)
-        # self.bn2 = nn.BatchNorm2d(num_features=64)
-        # self.sa = SpatialAttention()
-        # self.relu = nn.ReLU(inplace=True)
-        # self.global_avg_pool = nn.AdaptiveAvgPool2d(1)
-        # self.fc = nn.Linear(in_features=64, out_features=num_classes)
 
     def forward(self, x):
         # 1st block
@@ -163,26 +117,4 @@ class ConvNet(nn.Module):
         # Fully connected layer
         x = self.fc(x)
 
-        # # 1st convolutional layer
-        # x = self.conv1(x)
-        # x = self.bn1(x)
-        # ## attention mechanism
-        # x = self.sa(x) * x
-        # x = self.relu(x)
-
-        # # 2nd convolutional layer
-        # x = self.conv2(x)
-        # x = self.bn2(x)
-        # ## attention mechanism
-        # x = self.sa(x) * x
-        # x = self.relu(x)
-
-        # # Global average pooling
-        # x = self.global_avg_pool(x)
-
-        # # Flatten
-        # x = x.view(x.size(0), -1)
-
-        # # Fully connected layer
-        # x = self.fc(x)
         return x
