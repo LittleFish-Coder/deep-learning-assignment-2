@@ -5,14 +5,22 @@ import torch.nn as nn
 import torch
 from data.custom_dataset import MiniImageNetDataset
 from models.cnn import CNN
+from models.attention_cnn import ConvNet
 from tqdm import tqdm
 from torchvision import models
 import matplotlib.pyplot as plt
 from torchsummary import summary
 import os
+import argparse
 
 
-def test(model, test_loader):
+def save_metrics(test_accuracy, filename="log/log.txt"):
+    with open(filename, "w") as f:
+        f.write("Test Accuracy:\n")
+        f.write(f"{test_accuracy}\n")
+
+
+def test_model(model, test_loader):
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
@@ -35,29 +43,131 @@ def test(model, test_loader):
     return correct / total
 
 
-def task1():
-    pass
+def task1_CNN():
+    # checkpoints
+    checkpoints_dir = "checkpoints"
+    checkpoints_name = "task1_CNN_best.pth"  # checkpoints name
+    if not os.path.exists(f"{checkpoints_dir}/{checkpoints_name}"):
+        print("Checkpoints not found")
+        return
+
+    # log history
+    log_dir = "log"
+    log_name = "task1_CNN_test_accuracy.log"  # log name
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    # device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
+
+    # hyperparameters
+    num_classes = 50
+    batch_size = 64
+    input_size = (3, 256, 256)
+
+    # get the dataset and dataloader
+    ## test
+    print(f"Preparing the testing dataset...")
+    test_dataset = MiniImageNetDataset(text_file="test.txt", root_dir="./dataset")
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=16)
+    print(f"Number of test samples: {len(test_dataset)}")
+
+    # initialize model
+    model = CNN(num_classes=num_classes)
+
+    # load model
+    model.load_state_dict(torch.load(f"{checkpoints_dir}/{checkpoints_name}"))
+    model.eval()
+
+    # move model to device
+    model.to(device)
+
+    # summary
+    summary(model, input_size=input_size)
+
+    # test
+    accuracy = test_model(model, test_loader)
+
+    # save metrics
+    print(f"Accuracy: {accuracy}")
+    save_metrics(accuracy, f"{log_dir}/{log_name}")
 
 
 def task1_dynamic():
     pass
 
 
-def task2():
-    pass
+def task2_attention():
+
+    # checkpoints
+    checkpoints_dir = "checkpoints"
+    checkpoints_name = "task2_attention_best.pth"  # checkpoints name
+    if not os.path.exists(f"{checkpoints_dir}/{checkpoints_name}"):
+        print("Checkpoints not found")
+        return
+
+    # log history
+    log_dir = "log"
+    log_name = "task2_attention_test_accuracy.log"  # log name
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    # device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
+
+    # hyperparameters
+    num_classes = 50
+    batch_size = 64
+    input_size = (3, 256, 256)
+
+    # get the dataset and dataloader
+    ## test
+    print(f"Preparing the testing dataset...")
+    test_dataset = MiniImageNetDataset(text_file="test.txt", root_dir="./dataset")
+    test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=16)
+    print(f"Number of test samples: {len(test_dataset)}")
+
+    # initialize model
+    model = ConvNet(num_classes=num_classes)
+
+    # load model
+    model.load_state_dict(torch.load(f"{checkpoints_dir}/{checkpoints_name}"))
+    model.eval()
+
+    # move model to device
+    model.to(device)
+
+    # summary
+    summary(model, input_size=input_size)
+
+    # test
+    accuracy = test_model(model, test_loader)
+
+    # save metrics
+    print(f"Accuracy: {accuracy}")
+    save_metrics(accuracy, f"{log_dir}/{log_name}")
 
 
 def task2_ResNet34():
 
     # checkpoints
     checkpoints_dir = "checkpoints"
-    checkpoints_name = "task2_ResNet34_5.pth"  # checkpoints name
+    checkpoints_name = "task2_ResNet34_best.pth"  # checkpoints name
     if not os.path.exists(f"{checkpoints_dir}/{checkpoints_name}"):
         print("Checkpoints not found")
         return
 
+    # log history
+    log_dir = "log"
+    log_name = "task2_ResNet34_test_accuracy.log"  # log name
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
     # device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
 
     # hyperparameters
     num_classes = 50
@@ -85,25 +195,32 @@ def task2_ResNet34():
     summary(model, input_size=input_size)
 
     # test
-    accuracy = test(model, test_loader)
+    accuracy = test_model(model, test_loader)
 
+    # save metrics
     print(f"Accuracy: {accuracy}")
+    save_metrics(accuracy, f"{log_dir}/{log_name}")
 
 
 if __name__ == "__main__":
     print("Test Mode")
 
-    task = "task2_ResNet34"
+    parser = argparse.ArgumentParser(description="Training script")
+    parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2]")
+    args = parser.parse_args()
 
-    if task == "task1":
-        print("Running task1")
-        task1()  # do task1
+    task = args.task
+
+    print(f"Running task: {task}")
+
+    if task == "task1_CNN":
+        task1_CNN()
     elif task == "task1_dynamic":
-        print("Running task1_dynamic")
         task1_dynamic()
     elif task == "task2_ResNet34":
-        print("Running task2_ResNet34")
         task2_ResNet34()
+    elif task == "task2_attention":
+        task2_attention()
     else:
-        print("Running task2")
-        task2()  # do task2
+        print("Invalid task")
+        exit(1)
