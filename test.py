@@ -43,7 +43,7 @@ def test_model(model, test_loader):
     return correct / total
 
 
-def task1_CNN():
+def task1_CNN(channels="RGB"):
     # checkpoints
     checkpoints_dir = "checkpoints"
     checkpoints_name = "task1_CNN_best.pth"  # checkpoints name
@@ -53,7 +53,7 @@ def task1_CNN():
 
     # log history
     log_dir = "log"
-    log_name = "task1_CNN_test_accuracy.log"  # log name
+    log_name = f"task1_CNN_{channels}_test_accuracy.log"  # log name
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
@@ -69,7 +69,7 @@ def task1_CNN():
     # get the dataset and dataloader
     ## test
     print(f"Preparing the testing dataset...")
-    test_dataset = MiniImageNetDataset(text_file="test.txt", root_dir="./dataset")
+    test_dataset = MiniImageNetDataset(text_file="test.txt", root_dir="./dataset", channels=channels)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=16)
     print(f"Number of test samples: {len(test_dataset)}")
 
@@ -207,14 +207,16 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Training script")
     parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2]")
+    parser.add_argument("--channels", type=str, default="RGB", help="Channels to use [RGB, RG, GB, R, G, B]")
     args = parser.parse_args()
 
     task = args.task
+    channels = args.channels
 
     print(f"Running task: {task}")
 
     if task == "task1_CNN":
-        task1_CNN()
+        task1_CNN(channels=channels)
     elif task == "task1_dynamic":
         task1_dynamic()
     elif task == "task2_ResNet34":
