@@ -62,6 +62,56 @@ class CNN(nn.Module):
         return x
 
 
+class DYNAMIC_CNN(nn.Module):
+    """
+    The input image size is of shape (batch_size, 3, 256, 256)
+    """
+
+    def __init__(self, num_classes=50):
+        super(DYNAMIC_CNN, self).__init__()
+        self.model = CNN(1, num_classes)
+
+        self.model.conv1 = nn.Conv2d(in_channels=1, out_channels=32, kernel_size=3, padding=1)
+
+        num_ftrs = self.model.fc2.in_features
+        self.model.fc2 = nn.Linear(num_ftrs, num_classes)
+
+        self.model = nn.Sequential(*[PoolChannelAttention(), self.model])
+
+    def forward(self, x):
+        return self.model(x)
+
+
+class PoolChannelAttention(nn.Module):
+    def __init__(self):
+        super().__init__()
+        pool = ["Avg", "Max"]
+
+        in_channels = 1
+        self.kernel_size = 3
+
+        self.pool_types = [getattr(nn, "Adaptive" + p + "Pool3d")((1, None, None)) for p in pool]
+
+        ff_act = nn.ReLU()
+
+        _Sequential = [nn.Conv2d(1, 16, 3), ff_act, nn.Conv2d(16, 1, 3)]
+
+        self.mlp = nn.Sequential(*_Sequential)
+
+    def forward(self, x):
+        y = None
+        for pool_type in self.pool_types:
+            pool_x = pool_type(x)
+            out = self.mlp(pool_x)
+
+            if y is None:
+                y = out
+            else:
+                y += out
+
+        return y
+
+
 if __name__ == "__main__":
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,3 +119,11 @@ if __name__ == "__main__":
     model = CNN().to(device)
 
     summary(model, input_size=(3, 256, 256))
+
+    model = DYNAMIC_CNN().to(device)
+
+    summary(model, input_size=(3, 256, 256))
+
+    # random input
+    x = torch.randn(1, 2, 256, 256).to(device)
+    print(model(x).shape)

@@ -4,7 +4,7 @@ from torch.optim import Adam
 import torch.nn as nn
 import torch
 from data.custom_dataset import MiniImageNetDataset
-from models.cnn import CNN
+from models.cnn import CNN, DYNAMIC_CNN
 from models.attention_cnn import ConvNet
 from tqdm import tqdm
 from torchvision import models
@@ -239,7 +239,68 @@ def task1_CNN():
 
 # Designing a Convolution Module for Variable Input Channels
 def task1_dynamic():
-    pass
+    # checkpoints
+    checkpoints_dir = "checkpoints"
+    checkpoints_name = "task1_DYNAMIC_CNN"  # checkpoints name
+    if not os.path.exists(checkpoints_dir):
+        os.makedirs(checkpoints_dir)
+
+    # log history
+    log_dir = "log"
+    log_name = "task1_DYNAMIC_CNN_log.log"  # log name
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    # plot history
+    plot_dir = "plot"
+    plot_name = "task1_DYNAMIC_CNN.png"  # plot name
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+
+    # device
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Device: {device}")
+
+    # hyperparameters
+    n_epochs = 25
+    num_classes = 50
+    learning_rate = 0.001
+    batch_size = 64
+    in_channels = 3
+    input_size = (3, 256, 256)
+
+    # get the dataset and dataloader
+    ## train
+    print(f"Preparing the training dataset...")
+    train_dataset = MiniImageNetDataset(text_file="train.txt", root_dir="./dataset")
+    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=16)
+    ## val
+    print(f"Preparing the validation dataset...")
+    val_dataset = MiniImageNetDataset(text_file="val.txt", root_dir="./dataset")
+    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False, num_workers=16)
+
+    print(f"Number of training samples: {len(train_dataset)}")
+    print(f"Number of validation samples: {len(val_dataset)}")
+
+    # initialize the model
+    model = DYNAMIC_CNN(num_classes=num_classes)
+
+    # move the model to the device
+    model = model.to(device=device)
+
+    # print the model summary
+    summary(model, input_size=input_size)
+
+    # train model
+    train_accuracy, val_accuracy, train_loss, val_loss = train_model(
+        model, train_loader, val_loader, n_epochs, device, learning_rate, checkpoints_dir, checkpoints_name
+    )
+
+    # save the metrics
+    save_metrics(train_accuracy, val_accuracy, train_loss, val_loss, filename=f"{log_dir}/{log_name}")
+
+    # save the training and validation accuracy and loss (plot)
+    plot_images(train_accuracy, val_accuracy, train_loss, val_loss, filename=f"{plot_dir}/{plot_name}")
 
 
 # Designing a Two-Layer Network for Image Classification
