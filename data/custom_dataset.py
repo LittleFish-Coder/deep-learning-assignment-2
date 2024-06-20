@@ -6,7 +6,7 @@ import torch
 
 
 class MiniImageNetDataset(Dataset):
-    def __init__(self, text_file, root_dir, channels="RGB", show_partial_image=False):
+    def __init__(self, text_file, root_dir, channels="RGB", dynamic=False, show_partial_image=False):
         """
         Args:
             text_file (string): Path to the txt file with annotations
@@ -15,6 +15,7 @@ class MiniImageNetDataset(Dataset):
         """
         self.root_dir = root_dir
         self.channels = channels
+        self.dynamic = dynamic
         self.transform = transforms.Compose([transforms.Resize((256, 256)), transforms.ToTensor()])
         self.image_paths = []
         self.labels = []
@@ -25,7 +26,7 @@ class MiniImageNetDataset(Dataset):
                 self.image_paths.append(os.path.join(self.root_dir, image_path))
                 self.labels.append(int(label))
 
-        if show_partial_image:
+        if show_partial_image and dynamic == False:
             self._show_partial_image()
 
     def __len__(self):
@@ -52,6 +53,11 @@ class MiniImageNetDataset(Dataset):
         selected_image = torch.zeros(3, image.size(1), image.size(2))
         for channel in selected_channels:
             selected_image[channel] = image[channel, :, :]
+
+        if self.dynamic:
+            # only return the selected channels
+            selected_image = selected_image[selected_channels, :, :]
+            # print(f"Selected channels: {self.channels}, Shape: {selected_image.shape}")
 
         return selected_image
 
@@ -83,7 +89,13 @@ if __name__ == "__main__":
     for channel in ["RGB", "RG", "GB", "R", "G", "B"]:
         print(f"Channels: {channel}")
 
-        dataset = MiniImageNetDataset(text_file="train.txt", root_dir="../dataset", channels=channel, show_partial_image=True)
+        dataset = MiniImageNetDataset(text_file="test.txt", root_dir="../dataset", channels=channel, show_partial_image=True)
         print(f"Number of samples in the dataset: {len(dataset)}")
         image, label = dataset[0]
         print(f"Image shape: {image.shape}, Label: {label}")
+
+    # channel = "GB"
+    # dataset = MiniImageNetDataset(text_file="test.txt", root_dir="../dataset", channels=channel, dynamic=True, show_partial_image=True)
+    # print(f"Number of samples in the dataset: {len(dataset)}")
+    # image, label = dataset[0]
+    # print(f"Image shape: {image.shape}, Label: {label}")
