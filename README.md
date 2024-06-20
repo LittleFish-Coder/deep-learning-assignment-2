@@ -1,5 +1,8 @@
 # Deep Learning Assignment 2
 NCKU 112 Spring - Deep Learning Assignment 2 by Prof. Chih-Chung Hsu
+
+📝 You can check the report [here](./document/report.pdf)!
+
 ## Setup
 - Clone the repository
 ```bash
