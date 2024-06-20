@@ -269,7 +269,7 @@ if __name__ == "__main__":
     print("Test Mode")
 
     parser = argparse.ArgumentParser(description="Testing script")
-    parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2]")
+    parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2_attention]")
     parser.add_argument("--channels", type=str, default="RGB", help="Channels to use [RGB, RG, GB, R, G, B]")
     args = parser.parse_args()
 

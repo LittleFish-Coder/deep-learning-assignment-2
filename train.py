@@ -439,7 +439,7 @@ def task2_ResNet34():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Training script")
-    parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2]")
+    parser.add_argument("--task", type=str, default="task1_CNN", help="Task to run [task1_CNN, task1_dynamic, task2_ResNet34, task2_attention]")
     args = parser.parse_args()
 
     task = args.task
